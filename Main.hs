@@ -14,13 +14,16 @@ insertBigrams (x : remains@(x' : xs)) h
    extract :: Maybe [String] -> [String]
    extract (Just l) = l
 
-printText :: (RandomGen g) => Int -> g -> String -> HashMap String [String] -> String
-printText 0 _ _ _ = ""
-printText n g k h = nextk ++ " " ++ (printText (n-1) g nextk h)
-  where
-    lis = extract $ H.lookup k h
-    extract (Just str) = str
-    nextk = pick lis g
+printText :: (RandomGen g) => Int -> g -> String -> HashMap String [String] -> IO ()
+printText 0 _ _ _ = putStr ""
+printText n g k h = do
+  putStr (k ++ " ")
+  g <- R.newStdGen
+  (printText (n-1) g nextk h)
+    where
+      lis = extract $ H.lookup k h
+      extract (Just str) = str
+      nextk = pick lis g
 
 pick :: (RandomGen g) => [a] -> g -> a
 pick xs g = xs !! fst (R.randomR (0, length xs - 1) g)
@@ -33,11 +36,9 @@ main = do
   putStrLn "Enter number of words to print out: "
   getAnswer <- getLine
   let num = read getAnswer :: Int
-  g <- R.getStdGen
+  g <- R.newStdGen
   let firstword = pick (H.keys bigrams) g
-  let text = printText num g firstword bigrams
-  putStrLn text
-  --print word
+  printText num g firstword bigrams
   print num
   where
     newMap :: HashMap String [String]
